@@ -10,6 +10,7 @@ const isAuthenticatedController = asyncHandler(async (req, res) => {
                 id: true,
                 username: true,
                 email: true,
+                imgUrl: true,
                 createdAt: true
             },
         });

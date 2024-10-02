@@ -82,7 +82,8 @@ const singInController = asyncHandler(
                     username: true,
                     email: true,
                     createdAt : true,
-                    password : true
+                    password : true,
+                    imgUrl : true
                   },
             });
 

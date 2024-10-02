@@ -14,6 +14,7 @@ const isAuthenticatedController = asyncHandler(
                 id: true,
                 username: true,
                 email: true,
+                imgUrl : true,
                 createdAt : true
               },
         });

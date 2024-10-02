@@ -59,7 +59,8 @@ const singInController = asyncHandler(async (req, res) => {
                 username: true,
                 email: true,
                 createdAt: true,
-                password: true
+                password: true,
+                imgUrl: true
             },
         });
         if (!user) {

@@ -1,37 +1,24 @@
-import axios from "axios";
 import asyncHandler from "../../../utils/asyncHanlder.js";
 import db from "../../../utils/db/db.js";
+import getGoogleOauthTokens from "./getGoogleOauthTokens.js";
+import jwt from "jsonwebtoken";
 import { generateAccessAndRefereshTokens } from "../signInController.js";
-import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
 import generatePasswords from "../../../utils/generatePasswords.js";
-const githubLogin = asyncHandler(async (req, res) => {
+import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from "uuid";
+const googleLogin = asyncHandler(async (req, res) => {
     try {
         const code = req.body.code;
-        const client_Id = process.env.CLIENT_ID_GITHUB;
-        const client_secret = process.env.CLIENT_SECRET_GITHUB;
-        const params = `?client_id=${client_Id}&client_secret=${client_secret}&code=${code}`;
-        const tokenResponse = await axios.post(`https://github.com/login/oauth/access_token${params}`, {}, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-        });
-        const tokenData = tokenResponse.data;
-        const accessToken = tokenData.access_token;
-        console.log("Github Access Token ::", accessToken);
-        if (!accessToken) {
-            return res.status(400).json({ error: 'No access token received from GitHub' });
-        }
-        const userResponse = await axios.get('https://api.github.com/user', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        });
-        const userData = userResponse.data;
+        const { id_token, access_token } = await getGoogleOauthTokens(code);
+        console.log({ id_token, access_token });
+        const googleUser = jwt.decode(id_token);
+        console.log("Google user ::", googleUser);
+        const email = googleUser.email;
+        const name = googleUser.name;
+        const imgUrl = googleUser.picture;
         const user = await db.user.findFirst({
             where: {
-                email: userData.email,
+                email: email,
             },
             select: {
                 id: true,
@@ -43,15 +30,11 @@ const githubLogin = asyncHandler(async (req, res) => {
         });
         let responsePayload;
         if (!user) {
-            const name = userData.name;
-            const email = userData.email;
-            // check the img url path is correct
-            const imgUrl = userData.avatar_url;
             // check username is unique or not if not then provide an unique one
-            let username = userData.login;
+            let username = googleUser.given_name;
             let usernameExists = await db.user.findUnique({ where: { username } });
             while (usernameExists) {
-                username = `${userData.username}-${uuidv4().split('-')[0]}`;
+                username = `${name}-${uuidv4().split('-')[0]}`;
                 usernameExists = await db.user.findUnique({ where: { username } });
             }
             // generate a random strong password
@@ -66,7 +49,7 @@ const githubLogin = asyncHandler(async (req, res) => {
                     imgUrl: imgUrl
                 }
             });
-            const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(res, user);
+            const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(res, newUser);
             responsePayload = {
                 data: {
                     status: "success",
@@ -108,8 +91,9 @@ const githubLogin = asyncHandler(async (req, res) => {
             .json(responsePayload.data);
     }
     catch (error) {
+        console.log("Err at google login :: ", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
 });
-export default githubLogin;
-//# sourceMappingURL=githubLogin.js.map
+export default googleLogin;
+//# sourceMappingURL=googleLogin.js.map
