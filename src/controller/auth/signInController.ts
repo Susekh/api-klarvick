@@ -82,8 +82,23 @@ const singInController = asyncHandler(
                     username: true,
                     email: true,
                     createdAt : true,
+                    name : true,
                     password : true,
-                    imgUrl : true
+                    dob : true,
+                    imgUrl : true,
+                    projects: {
+                        include: {
+                            sprints: true,
+                            members: true,
+                        },
+                    },
+                    members: {
+                        include: {
+                            project: true,
+                            assingedIssues: true,
+                        },
+                    },
+                    gender : true
                   },
             });
 
@@ -95,7 +110,7 @@ const singInController = asyncHandler(
                 })
             };
 
-            const isPasswordValid =await bcrypt.compare(password, user.password);
+            const isPasswordValid = await bcrypt.compare(password, user.password);
     
             if(!isPasswordValid) {
                 return res.json({

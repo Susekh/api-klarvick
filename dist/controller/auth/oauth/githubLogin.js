@@ -37,12 +37,28 @@ const githubLogin = asyncHandler(async (req, res) => {
                 id: true,
                 username: true,
                 email: true,
+                name: true,
                 createdAt: true,
-                imgUrl: true
+                imgUrl: true,
+                projects: {
+                    include: {
+                        sprints: true,
+                        members: true,
+                    },
+                },
+                members: {
+                    include: {
+                        project: true,
+                        assingedIssues: true,
+                    },
+                },
+                dob: true,
+                gender: true
             },
         });
         let responsePayload;
         if (!user) {
+            console.log("User data ::", userData);
             const name = userData.name;
             const email = userData.email;
             // check the img url path is correct
@@ -59,6 +75,7 @@ const githubLogin = asyncHandler(async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, 10);
             const newUser = await db.user.create({
                 data: {
+                    id: userData.id,
                     username: username,
                     email: email,
                     name: name,
@@ -75,8 +92,11 @@ const githubLogin = asyncHandler(async (req, res) => {
                         id: newUser.id,
                         username: newUser.username,
                         email: newUser.email,
+                        name: newUser.name,
                         createdAt: newUser.createdAt,
                         imgUrl: newUser.imgUrl,
+                        projects: [],
+                        members: []
                     },
                     successMsg: "Logged in successfully.",
                 },

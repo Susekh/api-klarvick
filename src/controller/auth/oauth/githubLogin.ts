@@ -8,11 +8,14 @@ import {v4 as uuidv4 } from 'uuid';
 import generatePasswords from "../../../utils/generatePasswords.js";
 
 interface User {
-        id: number;
+        id: string;
         username: string;
         email: string;
         createdAt: Date;
+        name : string;
         imgUrl : string;
+        projects? : any,
+        members? : any
 }
 
 interface ResponsePayload {
@@ -75,14 +78,31 @@ const githubLogin = asyncHandler(
                     id: true,
                     username: true,
                     email: true,
+                    name : true,
                     createdAt : true,
-                    imgUrl : true
+                    imgUrl : true,
+                    projects: {
+                        include: {
+                            sprints: true,
+                            members: true,
+                        },
+                    },
+                    members: {
+                        include: {
+                            project: true,
+                            assingedIssues: true,
+                        },
+                    },
+                    dob : true,
+                    gender : true
                   },
             });
 
             let responsePayload : ResponsePayload ;
 
             if(!user) {
+              console.log("User data ::", userData);
+              
               const name = userData.name;
               const email = userData.email;
               // check the img url path is correct
@@ -103,6 +123,7 @@ const githubLogin = asyncHandler(
 
               const newUser = await db.user.create({
                 data : {
+                  id : userData.id,
                   username : username,
                   email : email,
                   name : name,
@@ -121,8 +142,11 @@ const githubLogin = asyncHandler(
                       id: newUser.id,
                       username: newUser.username,
                       email: newUser.email,
+                      name : newUser.name,
                       createdAt: newUser.createdAt,
                       imgUrl : newUser.imgUrl,
+                      projects : [],
+                      members : []
                   },
                     successMsg: "Logged in successfully.",
                   },

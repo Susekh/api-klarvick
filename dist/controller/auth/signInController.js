@@ -59,8 +59,23 @@ const singInController = asyncHandler(async (req, res) => {
                 username: true,
                 email: true,
                 createdAt: true,
+                name: true,
                 password: true,
-                imgUrl: true
+                dob: true,
+                imgUrl: true,
+                projects: {
+                    include: {
+                        sprints: true,
+                        members: true,
+                    },
+                },
+                members: {
+                    include: {
+                        project: true,
+                        assingedIssues: true,
+                    },
+                },
+                gender: true
             },
         });
         if (!user) {

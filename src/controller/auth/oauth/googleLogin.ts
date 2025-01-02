@@ -1,7 +1,7 @@
 import { CookieOptions } from "express";
 import asyncHandler from "../../../utils/asyncHanlder.js";
 import db from "../../../utils/db/db.js";
-import getGoogleOauthTokens from "./getGoogleOauthTokens.js";
+import getGoogleOauthTokens from "../../../utils/getGoogleOauthTokens.js";
 import jwt from "jsonwebtoken";
 import { generateAccessAndRefereshTokens } from "../signInController.js";
 import generatePasswords from "../../../utils/generatePasswords.js";
@@ -24,11 +24,14 @@ interface googleUser {
 }
 
 interface User {
-    id: number;
+    id: string;
     username: string;
     email: string;
+    name : string;
     createdAt: Date;
     imgUrl : string;
+    projects : any;
+    members : any
 }
 
 interface ResponsePayload {
@@ -66,8 +69,23 @@ const googleLogin = asyncHandler(async (req, res) => {
                 id: true,
                 username: true,
                 email: true,
+                name : true,
                 createdAt : true,
-                imgUrl : true
+                imgUrl : true,
+                dob : true,
+                projects: {
+                    include: {
+                        sprints: true,
+                        members: true,
+                    },
+                },
+                members: {
+                    include: {
+                        project: true,
+                        assingedIssues: true,
+                    },
+                },
+                gender : true,
               },
             });
 
@@ -98,6 +116,9 @@ const googleLogin = asyncHandler(async (req, res) => {
               }
             });
 
+            console.log("New User ::", newUser);
+            
+
             const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(res, newUser);
 
               responsePayload = {
@@ -108,8 +129,11 @@ const googleLogin = asyncHandler(async (req, res) => {
                     id: newUser.id,
                     username: newUser.username,
                     email: newUser.email,
+                    name : newUser.name,
                     createdAt: newUser.createdAt,
                     imgUrl : newUser.imgUrl,
+                    projects : [],
+                    members : [],
                 },
                   successMsg: "Logged in successfully.",
                 },

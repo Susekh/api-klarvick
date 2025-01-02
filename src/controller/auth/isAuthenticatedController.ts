@@ -14,8 +14,24 @@ const isAuthenticatedController = asyncHandler(
                 id: true,
                 username: true,
                 email: true,
+                createdAt : true,
+                name : true,
+                password : true,
+                dob : true,
                 imgUrl : true,
-                createdAt : true
+                projects: {
+                    include: {
+                        sprints: true,
+                        members: true,
+                    },
+                },
+                members: {
+                    include: {
+                        project: true,
+                        assingedIssues: true,
+                    },
+                },
+                gender : true
               },
         });
 
